@@ -21,7 +21,7 @@ The Parquet Data Application is a web-based tool for querying and displaying tax
 
 1. Data Acquisition
 
-•	Web Scraping with BeautifulSoup: Utilized BeautifulSoup to scrape data from a specified website to download all Parquet files from February and March 2019.
+•	Web Scraping with BeautifulSoup: Utilized BeautifulSoup to scrape data from a specified website to download all Parquet files from February and March 2019 using python and then converted the data to dataFrame to display the data using panda.
 
 2. Data Storage
 
