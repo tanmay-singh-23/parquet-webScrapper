@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parquet Data</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Additional styles for inputs */
+        .input-container {
+            margin-top: 10px;
+        }
+
+        .input-container input {
+            margin-right: 10px;
+            padding: 5px;
+        }
+
+        .input-container button {
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h2>Parquet Data</h2>
+        <div class="header-controls">
+            <button onclick="toggleInput('allData')">All Data</button>
+            <button onclick="toggleInput('licenseInput')">By License</button>
+            <button onclick="toggleInput('dispatchInput')">By Dispatch</button>
+            <button onclick="toggleInput('originInput')">By Origin</button>
+            <button onclick="toggleInput('dateInput')">By Date</button>
+            <button onclick="toggleInput('pickupInput')">By Pickup Location</button>
+            <button onclick="toggleInput('dropoffInput')">By Dropoff Location</button>
+            <button onclick="toggleInput('distanceInput')">By Distance</button>
+            <button onclick="toggleInput('fareInput')">By Fare</button>
+            <button onclick="toggleInput('tipsInput')">By Tips</button>
+            <!-- <button onclick="fetchAllData()">Show All Data</button> Show All Data button -->
+        </div>
+        <!-- Input containers -->
+        <div class="input-container" id="allData" style="display: none;">
+            <button onclick="fetchAllData()">Fetch All Data</button>
+        </div>
+        <div class="input-container" id="licenseInput" style="display: none;">
+            <input type="text" id="licenseNumber" placeholder="Enter License Number">
+            <button onclick="fetchByLicense()">Fetch</button>
+        </div>
+        <div class="input-container" id="dispatchInput" style="display: none;">
+            <input type="text" id="dispatchNumber" placeholder="Enter Dispatch Number">
+            <button onclick="fetchByDispatch()">Fetch</button>
+        </div>
+        <div class="input-container" id="originInput" style="display: none;">
+            <input type="text" id="originNumber" placeholder="Enter Origin Number">
+            <button onclick="fetchByOrigin()">Fetch</button>
+        </div>
+        <div class="input-container" id="dateInput" style="display: none;">
+            <input type="text" id="dateValue" placeholder="Enter Date (YYYY-MM-DD)">
+            <button onclick="fetchByDate()">Fetch</button>
+        </div>
+        <div class="input-container" id="pickupInput" style="display: none;">
+            <input type="text" id="pickupLocation" placeholder="Enter Pickup Location ID">
+            <button onclick="fetchByPickup()">Fetch</button>
+        </div>
+        <div class="input-container" id="dropoffInput" style="display: none;">
+            <input type="text" id="dropoffLocation" placeholder="Enter Dropoff Location ID">
+            <button onclick="fetchByDropoff()">Fetch</button>
+        </div>
+        <div class="input-container" id="distanceInput" style="display: none;">
+            <input type="text" id="minDistance" placeholder="Enter Minimum Trip Distance (miles)">
+            <button onclick="fetchByDistance()">Fetch</button>
+        </div>
+        <div class="input-container" id="fareInput" style="display: none;">
+            <input type="text" id="minFare" placeholder="Enter Minimum Fare Amount">
+            <button onclick="fetchByFare()">Fetch</button>
+        </div>
+        <div class="input-container" id="tipsInput" style="display: none;">
+            <input type="text" id="minTips" placeholder="Enter Minimum Tips Amount">
+            <button onclick="fetchByTips()">Fetch</button>
+        </div>
+    </header>
+    <main>
+        <div id="content">
+            <h2>Data</h2>
+            <div class="controls">
+                <table id="data-table">
+                    <thead>
+                        <tr>
+                            <th>License Num</th>
+                            <th>Dispatch Base Num</th>
+                            <th>Origin Base Num</th>
+                            <th>Request Datetime</th>
+                            <th>Pickup Datetime</th>
+                            <th>Dropoff Datetime</th>
+                            <th>Pickup Location</th>
+                            <th>Dropoff Location</th>
+                            <th>Trip Miles</th>
+                            <th>Fare</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <script>
+        async function fetchData(endpoint) {
+            try {
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                const tableBody = document.querySelector('#data-table tbody');
+                tableBody.innerHTML = '';
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+            <td>${item.hvfhs_license_num}</td>
+            <td>${item.dispatching_base_num}</td>
+            <td>${item.originating_base_num}</td>
+            <td>${new Date(item.request_datetime).toLocaleString()}</td>
+            <td>${new Date(item.pickup_datetime).toLocaleString()}</td>
+            <td>${new Date(item.dropoff_datetime).toLocaleString()}</td>
+            <td>${item.PULocationID}</td>
+            <td>${item.DOLocationID}</td>
+            <td>${item.trip_miles}</td>
+            <td>${item.base_passenger_fare}</td>
+          `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function updateEndpoint(endpoint) {
+            history.pushState(null, '', endpoint);
+            fetchData(endpoint);
+        }
+
+        window.addEventListener('popstate', () => {
+            fetchData(location.pathname);
+        });
+
+        function toggleInput(inputId) {
+            // Hide all input containers
+            const inputContainers = document.querySelectorAll('.input-container');
+            inputContainers.forEach(container => {
+                container.style.display = 'none';
+            });
+            // Show the selected input container
+            const selectedContainer = document.getElementById(inputId);
+            selectedContainer.style.display = 'block';
+        }
+
+        // Fetch functions for each input type
+        function fetchAllData() {
+            const endpoint = `/data`;
+            updateEndpoint(endpoint);
+        }
+
+        function fetchByLicense() {
+            const licenseNumber = document.getElementById('licenseNumber').value.trim();
+            if (licenseNumber) {
+                const endpoint = `/data/license/${licenseNumber}`;
+                updateEndpoint(endpoint);
+                clearInput('licenseNumber');
+            }
+        }
+
+        function fetchByDispatch() {
+            const dispatchNumber = document.getElementById('dispatchNumber').value.trim();
+            if (dispatchNumber) {
+                const endpoint = `/data/dispatch/${dispatchNumber}`;
+                updateEndpoint(endpoint);
+                clearInput('dispatchNumber');
+            }
+        }
+
+        function fetchByOrigin() {
+            const originNumber = document.getElementById('originNumber').value.trim();
+            if (originNumber) {
+                const endpoint = `/data/origin/${originNumber}`;
+                updateEndpoint(endpoint);
+                clearInput('originNumber');
+            }
+        }
+
+        function fetchByDate() {
+            const dateValue = document.getElementById('dateValue').value.trim();
+            if (dateValue) {
+                const endpoint = `/data/date/${dateValue}`;
+                updateEndpoint(endpoint);
+                clearInput('dateValue');
+            }
+        }
+
+        function fetchByPickup() {
+            const pickupLocation = document.getElementById('pickupLocation').value.trim();
+            if (pickupLocation) {
+                const endpoint = `/data/pickup/${pickupLocation}`;
+                updateEndpoint(endpoint);
+                clearInput('pickupLocation');
+            }
+        }
+
+        function fetchByDropoff() {
+            const dropoffLocation = document.getElementById('dropoffLocation').value.trim();
+            if (dropoffLocation) {
+                const endpoint = `/data/dropoff/${dropoffLocation}`;
+                updateEndpoint(endpoint);
+                clearInput('dropoffLocation');
+            }
+        }
+
+        function fetchByDistance() {
+            const minDistance = document.getElementById('minDistance').value.trim();
+            if (minDistance) {
+                const endpoint = `/data/distance/${minDistance}`;
+                updateEndpoint(endpoint);
+                clearInput('minDistance');
+            }
+        }
+
+        function fetchByFare() {
+            const minFare = document.getElementById('minFare').value.trim();
+            if (minFare) {
+                const endpoint = `/data/fare/${minFare}`;
+                updateEndpoint(endpoint);
+                clearInput('minFare');
+            }
+        }
+
+        function fetchByTips() {
+            const minTips = document.getElementById('minTips').value.trim();
+            if (minTips) {
+                const endpoint = `/data/tips/${minTips}`;
+                updateEndpoint(endpoint);
+                clearInput('minTips');
+            }
+        }
+
+        // Helper function to clear input value
+        function clearInput(inputId) {
+            document.getElementById(inputId).value = '';
+        }
+
+        // Initial fetch based on current URL
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData(location.pathname);
+        });
+    </script>
+</body>
+
+</html>
